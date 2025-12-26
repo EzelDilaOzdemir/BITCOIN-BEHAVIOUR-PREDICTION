@@ -44,7 +44,7 @@ Sniper Method (Selective Prediction Framework)
 
 Predictions executed only when:
 
-Absolute daily return exceeds ±0.5%
+Absolute daily return exceeds ±0.6%
 
 Model confidence exceeds 55%
 
