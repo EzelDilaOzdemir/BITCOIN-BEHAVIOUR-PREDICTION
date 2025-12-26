@@ -80,11 +80,9 @@ Days with low model confidence are intentionally skipped
 
 # Results
 
-Achieved approximately 53% accuracy on high-confidence predictions
+Achieved approximately 55% accuracy on high-confidence predictions
 
-Model avoided trading on ~59% of uncertain market days
-
-Performance consistently exceeded random baseline behavior
+Performance consistently exceeded random baseline behavior however model tend to predict up movement most of the time
 
 Results support the hypothesis that Bitcoin is influenced by broader economic conditions
 
