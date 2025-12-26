@@ -30,8 +30,8 @@ tickers = {
 }
 
 #define start and end dates
-start_date = '2015-11-09'
-end_date = '2025-03-23'
+start_date = '2015-01-01'
+end_date = '2025-01-01'
 
 # Download Closing prices
 raw_data = yf.download(list(tickers.keys()), start=start_date, end=end_date)['Close']
@@ -53,18 +53,6 @@ btc_full = yf.download('BTC-USD', start=start_date, end=end_date)
 merged_df['BTC_Volume'] = btc_full['Volume']
 merged_df['BTC_Volume_Change'] = np.log(merged_df['BTC_Volume'] / merged_df['BTC_Volume'].shift(1))
 
-# Visualizing Prices
-
-# Graph 1: SP500 PRICE
-merged_df['SP500'].plot(kind='line', figsize=(8, 4), title='GRAPH 1: SP500 PRICE')
-plt.gca().spines[['top', 'right']].set_visible(False)
-plt.show()
-
-# Graph 2: BTC PRICE
-merged_df['BTC'].plot(kind='line', figsize=(8, 4), title='GRAPH 2: BTC PRICE')
-plt.gca().spines[['top', 'right']].set_visible(False)
-plt.show()
-
 # Calculate log returns for ALL tickers
 for col in merged_df.columns:
     if col in tickers.values():
@@ -76,41 +64,12 @@ merged_df = merged_df.replace([np.inf, -np.inf], np.nan).dropna()
 print(f"merged_df after log return calculation end date: {merged_df.index.max()}")
 display(merged_df.tail())
 
-# Visualizing Log Returns
-
-# Graph 3: Daily Log Returns
-fig = pg.Figure()
-
-fig.add_trace(pg.Scatter(
-    x=merged_df.index,
-    y=merged_df['BTC_Log_Return'],
-    mode='lines',
-    name='Bitcoin Log Returns'
-))
-
-fig.add_trace(pg.Scatter(
-    x=merged_df.index,
-    y=merged_df['SP500_Log_Return'],
-    mode='lines',
-    name='SP500 Log Returns'
-))
-
-fig.update_layout(
-    title='GRAPH 3: Daily Log Returns of BTC and S500',
-    xaxis_title='Date',
-    yaxis_title='Log Returns',
-    hovermode='x unified'
-)
-
-fig.show()
-
-
-# 6. Correlations
+# Correlations
 print("\nCorrelation Matrix (Log Returns):")
 log_return_cols = [c for c in merged_df.columns if 'Log_Return' in c]
 display(merged_df[log_return_cols].corr())
 
-# Graph 4: Linear Regression BTC vs SP500 Log Returns
+# Graph: Linear Regression BTC vs SP500 Log Returns
 plt.figure(figsize=(10, 6))
 sns.regplot(x=merged_df['SP500_Log_Return'], y=merged_df['BTC_Log_Return'], scatter_kws={'alpha':0.3})
 plt.title('GRAPH 4: Linear Regression of Bitcoin Log Return vs. SP500 Log Return')
@@ -118,7 +77,6 @@ plt.xlabel('SP500 Log Return')
 plt.ylabel('Bitcoin Log Return')
 plt.grid(True)
 plt.show()
-
 
 # Standardize Volatility
 merged_df['rolling_std_SP500'] = merged_df['SP500_Log_Return'].rolling(window=30).std()
@@ -155,13 +113,13 @@ merged_df['NASDAQ100_Log_Return_Lag1'] = merged_df['NASDAQ100_Log_Return'].shift
 
 merged_df.dropna(inplace=True)
 
-#NEW TARGET DEFINITION (NOISE FILTER) ---
+#TARGET DEFINITION (NOISE FILTER)
 
 # Calculate future return
 merged_df['Next_Log_Return'] = merged_df['BTC_Log_Return'].shift(-1)
 
-# Define Threshold (0.5% move required)
-threshold = 0.005
+# Define Threshold (0.6% move required)
+threshold = 0.006
 
 # Create Target (1=Up, 0=Down, NaN=Flat)
 merged_df['Target'] = np.where(merged_df['Next_Log_Return'] > threshold, 1,
@@ -196,7 +154,7 @@ y = y.astype(int)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
 
 
-# 9. Machine Learning Model (The "Sniper" Approach)
+# Machine Learning Model (The "Sniper" Approach)
 print("\n--- Training Random Forest Model (Sniper Mode) ---")
 
 
@@ -235,7 +193,7 @@ for i in range(len(probs)):
         # Model is unsure (e.g., 51% vs 49%). We SKIP this day.
         pass
 
-# D. Evaluate the "Sniper" Results
+# Evaluate the "Sniper" Results
 if len(custom_preds) > 0:
     results_df = pd.DataFrame({'Actual': actuals, 'Predicted': custom_preds}, index=dates)
     results_df['Correct'] = results_df['Actual'] == results_df['Predicted']
